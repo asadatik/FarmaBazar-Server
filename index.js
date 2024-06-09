@@ -29,8 +29,8 @@ async function run() {
   try {
               // collections
     const CategoryCardCollection  = client.db('FarmaBazar').collection('category')
-
-
+    const MedicineCollection  = client.db('FarmaBazar').collection('allMedicine')
+    
       
  ////Category OF MEDICINE////  
 
@@ -40,6 +40,13 @@ async function run() {
 
      res.send(result)
     })  
+
+ ////   ALL MEDICINE     ////  
+ app.get('/allmedi', async (req, res) => {
+  const result = await MedicineCollection.find().toArray()
+  res.send(result)
+ }) 
+   
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
