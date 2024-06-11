@@ -30,6 +30,7 @@ async function run() {
               // collections
     const CategoryCardCollection  = client.db('FarmaBazar').collection('category')
     const MedicineCollection  = client.db('FarmaBazar').collection('allMedicine')
+    const SelectedMedicine  = client.db('FarmaBazar').collection('ordered')
     
       
  ////Category OF MEDICINE////  
@@ -42,12 +43,32 @@ async function run() {
     })  
 
  ////   ALL MEDICINE     ////  
+
+//get   
+
  app.get('/allmedi', async (req, res) => {
   const result = await MedicineCollection.find().toArray()
   res.send(result)
  }) 
-   
 
+ //// Added selected data in dataBASE
+ app.post('/carts', async (req, res) => {
+  const cartItem = req.body;
+  const result = await SelectedMedicine.insertOne(cartItem);
+  res.send(result);
+});
+
+  // Get all Selected MEDICINE data from db
+  app.get('/carts', async (req, res) => {
+    const email = req.query.email; 
+    console.log(req.query)
+        console.log(email, "vejalllllllllllllllllllllllllllllllllllllllllllllllllllll" )
+       const query = { email : email };
+        const result = await SelectedMedicine.find(query).toArray();
+        res.send(result);
+      });
+   
+       
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
   }
