@@ -31,7 +31,24 @@ async function run() {
     const CategoryCardCollection  = client.db('FarmaBazar').collection('category')
     const MedicineCollection  = client.db('FarmaBazar').collection('allMedicine')
     const SelectedMedicine  = client.db('FarmaBazar').collection('ordered')
-    
+    const userCollection  = client.db('FarmaBazar').collection('users')
+
+ // USER RELETED API
+
+// post user info
+  
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      console.log(user)
+      const query = { email : user.email }
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null })
+      }
+
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });   
       
  ////Category OF MEDICINE////  
 
