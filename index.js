@@ -33,7 +33,50 @@ async function run() {
     const SelectedMedicine  = client.db('FarmaBazar').collection('ordered')
     const userCollection  = client.db('FarmaBazar').collection('users')
 
- // USER RELETED API
+ /////////USER RELETED API
+
+//updated user role 
+ app.patch('/users/user/:id',  async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedDoc = {
+    $set: {
+      role: 'user'
+    }
+  }
+  const result = await userCollection.updateOne(filter, updatedDoc);
+  res.send(result);
+})
+
+//updated seller role 
+app.patch('/users/seller/:id',  async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedDoc = {
+    $set: {
+      role: 'seller'
+    }
+  }
+  const result = await userCollection.updateOne(filter, updatedDoc);
+  res.send(result);
+})
+
+//updated Admin role
+app.patch('/users/admin/:id',  async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedDoc = {
+    $set: {
+      role: 'admin'
+    }
+  }
+  const result = await userCollection.updateOne(filter, updatedDoc);
+  res.send(result);
+})
+
+
+
+
 
 // post user info
   
@@ -48,7 +91,14 @@ async function run() {
 
       const result = await userCollection.insertOne(user);
       res.send(result);
-    });   
+    });  
+   //get 
+   app.get('/users', async (req, res) => {
+    const result = await userCollection.find().toArray()
+
+    res.send(result)
+   })  
+    
       
  ////Category OF MEDICINE////  
 
