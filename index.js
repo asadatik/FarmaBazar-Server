@@ -100,14 +100,46 @@ app.patch('/users/admin/:id',  async (req, res) => {
    })  
     
       
- ////Category OF MEDICINE////  
+ ////CATEGORY ////  
 
 //get 
     app.get('/category', async (req, res) => {
      const result = await CategoryCardCollection.find().toArray()
 
      res.send(result)
-    })  
+    }) 
+
+// Delete
+    app.delete('/category/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await CategoryCardCollection.deleteOne(query);
+      res.send(result);
+    })
+   // Updated Oparetion
+
+   app.put("/category/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const options = { upsert: true };
+    const updateSpot = {
+      $set: {
+        name: req.body.name,
+        image:req.body.image,
+        itemCount:req.body.itemCount
+      },
+    };
+    const result = await CategoryCardCollection.updateOne(
+      query,
+      updateSpot,
+      options
+    );
+    res.send(result);
+    console.log(id, query, result);
+  });
+
+
+
 
  ////   ALL MEDICINE     ////  
 
