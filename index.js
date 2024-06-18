@@ -34,7 +34,7 @@ async function run() {
     const advertisementCollection = client.db('FarmaBazar').collection('Advertise')
     const sliderCollection = client.db('FarmaBazar').collection('slider')
 
- // /////////////////    JWT Api        ///////////////////////////////////
+    // /////////////////    JWT Api        ///////////////////////////////////
 
     app.post('/jwt', async (req, res) => {
       const user = req.body;
@@ -45,22 +45,22 @@ async function run() {
     })
 
     // middlewares 
-                const verifyToken = (req, res, next) => {
-                  console.log('inside verify token', req.headers.authorization);
-                 if (!req.headers.authorization) {
-                   return res.status(401).send({ message: 'unauthorized access' });
-                     }
-                      const token = req.headers.authorization.split(' ')[1];
-                         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-                     if (err) {
-                       return res.status(401).send({ message: 'unauthorized access' })
-                      }
-                    req.decoded = decoded;
-                            next();
-                    })
+    const verifyToken = (req, res, next) => {
+      console.log('inside verify token', req.headers.authorization);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'unauthorized access' });
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'unauthorized access' })
+        }
+        req.decoded = decoded;
+        next();
+      })
 
-               
-                                }
+
+    }
 
 
 
@@ -188,6 +188,28 @@ async function run() {
       res.send(result)
     })
 
+
+    //  seller added Abd Get medicine
+
+  
+    app.get('/allMedicines/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const filter = { sellerEmail: email };
+      const result = await MedicineCollection.find(filter).toArray();
+      res.send(result);
+    })
+
+    app.post('/allMedicine', verifyToken, async (req, res) => {
+      const query = req.body;
+      const result = await MedicineCollection.insertOne(query);
+      res.send(result);
+    })
+
+
+
+
+
+
     //// Added selected data in dataBASE
     app.post('/carts', async (req, res) => {
       const cartItem = req.body;
@@ -214,59 +236,62 @@ async function run() {
 
 
     // ADVIRSMENT 
-        app.post('/advert', verifyToken, async (req, res) => {
-          const info = req.body;
-          const result = await advertisementCollection.insertOne(info);
-          res.send(result);
-      })
+    app.post('/advert', verifyToken, async (req, res) => {
+      const info = req.body;
+      const result = await advertisementCollection.insertOne(info);
+      res.send(result);
+    })
 
-      app.get('/advert', verifyToken, async (req, res) => {
-          const result = await advertisementCollection.find().toArray();
-          res.send(result)
-      })
+    app.get('/advert', verifyToken, async (req, res) => {
+      const result = await advertisementCollection.find().toArray();
+      res.send(result)
+    })
 
-      app.patch('/advert/:id', verifyToken, async (req, res) => {
-          const id = req.params.id;
-          const data = req.body;
-          const query = { _id: new ObjectId(id) };
-          const updateDoc = {
-              $set: {
-                  status: data.status
-              }
-          };
-          const result = await advertisementCollection.updateOne(query, updateDoc);
-          res.send(result);
-      })
+    app.patch('/advert/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: data.status
+        }
+      };
+      const result = await advertisementCollection.updateOne(query, updateDoc);
+      res.send(result);
+    })
 
-      app.get('/advertisement', verifyToken, async (req, res) => {
-          const email = req.query.email;
-          console.log(email);
-          const filter = { sellerEmail: email };
-          const result = await advertisementCollection.find(filter).toArray();
-          res.send(result);
-      })
+    app.get('/advertisement', verifyToken, async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const filter = { sellerEmail: email };
+      const result = await advertisementCollection.find(filter).toArray();
+      res.send(result);
+    })
+
+
+    // slider related api
+
+
+    app.get('/slider', async (req, res) => {
+      const result = await sliderCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.post('/slider', verifyToken, async (req, res) => {
+      const data = req.body;
+      const result = await sliderCollection.insertOne(data);
+      res.send(result);
+    })
 
 
 
-   // slider related api
-      
-      
-        app.get('/slider', async (req, res) => {
-          const result = await sliderCollection.find().toArray();
-          res.send(result);
-      })
+    app.delete('/sliders/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
 
-      app.post('/slider', verifyToken, async (req, res) => {
-          const data = req.body;
-          const result = await sliderCollection.insertOne(data);
-          res.send(result);
-      })
-      app.delete('/sliders/:id', verifyToken, async (req, res) => {
-          const id = req.params.id;
-          const quary = { id: id };
-          const result = await sliderCollection.deleteOne(quary);
-          res.send(result);
-      })
+      const query = { id: id }
+      const result = await sliderCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
 
