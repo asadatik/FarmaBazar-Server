@@ -1,7 +1,10 @@
 const express = require('express');
 const app = express();
-const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
+const jwt = require('jsonwebtoken');
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 const cors = require('cors');
 const port = process.env.PORT || 5000;
@@ -33,6 +36,7 @@ async function run() {
     const userCollection = client.db('FarmaBazar').collection('users')
     const advertisementCollection = client.db('FarmaBazar').collection('Advertise')
     const sliderCollection = client.db('FarmaBazar').collection('slider')
+    const paymentsCollection = client.db('FarmaBazar').collection('pAy')
 
     // /////////////////    JWT Api        ///////////////////////////////////
 
@@ -130,6 +134,17 @@ async function run() {
       res.send(result)
     })
 
+    
+    // Get by Email 
+    app.get('/user/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const quary = { email: email };
+      const result = await userCollection.findOne(quary);
+      res.send(result);
+    })
+
+
+
 
     ////CATEGORY ////  
 
@@ -191,7 +206,7 @@ async function run() {
 
     //  seller added Abd Get medicine
 
-  
+
     app.get('/allMedicines/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const filter = { sellerEmail: email };
@@ -227,12 +242,36 @@ async function run() {
       res.send(result);
     });
     // delete SELECTED dataaaaaa
-    app.delete('/carts/:id', async (req, res) => {
+    app.delete('/cart/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await SelectedMedicine.deleteOne(query);
       res.send(result);
     })
+    // delete many
+    app.delete('/carts/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email }
+      const result = await SelectedMedicine.deleteMany(query);
+      res.send(result);
+    })
+
+ // Updated Quantity
+    app.put('/carts/:id', async (req, res) => {
+      const id = req.params.id;
+      const { quantity } = req.body;
+     
+      // Ensure quantity is not less than 1
+      if (quantity < 1) {
+        return res.status(400).send({ error: 'Quantity cannot be less than 1' });
+      }
+
+      const query = { _id: new ObjectId(id) };
+      const update = { $set: { quantity: quantity } };
+
+      const result = await SelectedMedicine.updateOne(query, update);
+      res.send(result);
+    });
 
 
     // ADVIRSMENT 
@@ -294,6 +333,68 @@ async function run() {
     })
 
 
+    // PAYMENT All api
+
+    app.post("/createPayment", verifyToken, async (req, res) => {
+      const { price } = req.body;
+      const amount = (price * 1000);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ['card']
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      })
+    })
+
+    app.post('/payments', verifyToken, async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentsCollection.insertOne(payment);
+      res.send({ paymentResult })
+    })
+    // Get All Payment 
+    app.get('/allPayment', verifyToken, async (req, res) => {
+      const result = await paymentsCollection.find().toArray();
+      res.send(result);
+    })
+
+    // gET Specific By id
+    app.get('/payments/:id', verifyToken, async (req, res) => {
+      const paymentId = req.params.id;
+      paymentsCollection.findOne({ _id: new ObjectId(paymentId) })
+        .then(payment => res.send(payment))
+        .catch(error => res.status(500).send({ error: 'Failed to fetch payment details' }));
+    });
+
+    // get by   email 
+    app.get('/payments', verifyToken, async (req, res) => {
+      const email = req.query.email;
+      const filter = { email: email };
+      const result = await paymentsCollection.find(filter).toArray();
+      res.send(result);
+    })
+    // Get By Seller Email
+    app.get('/payment', verifyToken, async (req, res) => {
+      const email = req.query.email;
+      const filter = { sellerEmail: email };
+      const result = await paymentsCollection.find(filter).toArray();
+      res.send(result);
+    })
+
+
+  // Status Updated
+    app.patch('/payment/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'Paid'
+        }
+      };
+      const result = await paymentsCollection.updateOne(query, updateDoc);
+      res.send(result);
+    })
 
 
 
