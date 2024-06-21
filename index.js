@@ -37,6 +37,8 @@ async function run() {
     const advertisementCollection = client.db('FarmaBazar').collection('Advertise')
     const sliderCollection = client.db('FarmaBazar').collection('slider')
     const paymentsCollection = client.db('FarmaBazar').collection('pAy')
+    const DiscountCollection = client.db('FarmaBazar').collection('Offer')
+
 
     // /////////////////    JWT Api        ///////////////////////////////////
 
@@ -65,9 +67,15 @@ async function run() {
 
 
     }
+   // Discount-Product
+   app.get('/offer', async (req, res) => {
+    const result = await DiscountCollection.find().toArray()
+
+    res.send(result)
+  })
 
 
-
+ 
     /////////USER RELETED API
 
     //updated user role 
@@ -112,6 +120,21 @@ async function run() {
 
 
 
+  // admin 
+  app.get('/user/admin/:email', verifyToken, async (req, res) => {
+    const email = req.params.email;
+    if (email !== req.decoded.email) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    };
+    const query = { email: email };
+    const user = await userCollection.findOne(query);
+    let admin = false;
+    if (user) {
+        admin = user?.role === 'admin';
+    }
+    res.send({ admin });
+})
+
 
     // post user info
 
@@ -134,7 +157,7 @@ async function run() {
       res.send(result)
     })
 
-    
+
     // Get by Email 
     app.get('/user/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -256,11 +279,11 @@ async function run() {
       res.send(result);
     })
 
- // Updated Quantity
+    // Updated Quantity
     app.put('/carts/:id', async (req, res) => {
       const id = req.params.id;
       const { quantity } = req.body;
-     
+
       // Ensure quantity is not less than 1
       if (quantity < 1) {
         return res.status(400).send({ error: 'Quantity cannot be less than 1' });
@@ -367,13 +390,15 @@ async function run() {
         .catch(error => res.status(500).send({ error: 'Failed to fetch payment details' }));
     });
 
-    // get by   email 
-    app.get('/payments', verifyToken, async (req, res) => {
+    // get by user  email 
+    app.get('/pay', verifyToken, async (req, res) => {
       const email = req.query.email;
       const filter = { email: email };
       const result = await paymentsCollection.find(filter).toArray();
       res.send(result);
     })
+
+
     // Get By Seller Email
     app.get('/payment', verifyToken, async (req, res) => {
       const email = req.query.email;
@@ -383,7 +408,7 @@ async function run() {
     })
 
 
-  // Status Updated
+    // Status Updated
     app.patch('/payment/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
