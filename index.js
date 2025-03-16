@@ -67,6 +67,10 @@ async function run() {
 
 
     }
+
+
+
+    
    // Discount-Product
    app.get('/offer', async (req, res) => {
     const result = await DiscountCollection.find().toArray()
